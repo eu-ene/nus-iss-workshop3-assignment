@@ -19,6 +19,7 @@ Key components:
 - OpenAI is used only for ranking and summarization; heuristic fallback provided so the system still works offline.
 
 ## Folder Structure (Ideal state)
+```
 travel_planner_multi_agent/
 ├── main.py              # Entry point to run the system
 ├── state.py             # Shared state & TypedDict definitions
@@ -33,7 +34,7 @@ travel_planner_multi_agent/
     ├── flight_tools.py
     ├── hotel_tools.py
     └── restaurant_tools.py
-
+```
 
 ## Requirements & setup
 
