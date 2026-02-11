@@ -18,6 +18,23 @@ Key components:
 - All external-scrape / API calls are centralized in `tools/scraper.py` to enforce the “only use” constraints.
 - OpenAI is used only for ranking and summarization; heuristic fallback provided so the system still works offline.
 
+## Folder Structure (Ideal state)
+travel_planner_multi_agent/
+├── main.py              # Entry point to run the system
+├── state.py             # Shared state & TypedDict definitions
+├── orchestrator.py      # Define edges and nodes, or known as `graph.py`
+├── supervisor.py        # Manager logic (delegation & routing)
+├── agents/
+│   ├── flight_agent.py  # Flight specialist logic
+│   ├── hotel_agent.py   # Hotel specialist logic
+│   ├── restaurant_agent.py # Restaurant specialist logic
+│   └── budget_agent.py  # Python-logic based budget checker
+└── tools/
+    ├── flight_tools.py
+    ├── hotel_tools.py
+    └── restaurant_tools.py
+
+
 ## Requirements & setup
 
 1. Create and activate a venv:

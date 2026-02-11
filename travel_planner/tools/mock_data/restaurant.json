@@ -1,0 +1,202 @@
+{
+    {
+    "location": "Tokyo, Japan",
+    "restaurants": [
+        {
+        "id": "tyo_001",
+        "name": "Kaiten Sushi Toriton",
+        "cuisine": "Sushi",
+        "rating": 4.7,
+        "price_level": "$$",
+        "neighborhood": "Sumida (Tokyo Skytree)",
+        "highlights": ["Fresh Hokkaido seafood", "Conveyor belt style", "Massive nigiri portions"]
+        },
+        {
+        "id": "tyo_002",
+        "name": "Rokurinsha",
+        "cuisine": "Ramen (Tsukemen)",
+        "rating": 4.5,
+        "price_level": "$",
+        "neighborhood": "Tokyo Station",
+        "highlights": ["Famous dipping noodles", "Located in Ramen Street", "Usually has a queue"]
+        },
+        {
+        "id": "tyo_003",
+        "name": "Sézanne",
+        "cuisine": "Modern French",
+        "rating": 4.9,
+        "price_level": "$$$$",
+        "neighborhood": "Marunouchi",
+        "highlights": ["Two Michelin Stars", "Voted best in Asia 2024", "Inside Four Seasons"]
+        },
+        {
+        "id": "tyo_004",
+        "name": "Gyukatsu Motomura",
+        "cuisine": "Japanese (Beef Cutlet)",
+        "rating": 4.6,
+        "price_level": "$$",
+        "neighborhood": "Shibuya",
+        "highlights": ["Deep-fried rare beef", "Personal stone grills", "Very popular with travelers"]
+        },
+        {
+        "id": "tyo_005",
+        "name": "Den",
+        "cuisine": "Kaiseki (Modern)",
+        "rating": 4.8,
+        "price_level": "$$$$",
+        "neighborhood": "Jingumae",
+        "highlights": ["Playful presentation", "Dentucky Fried Chicken dish", "Incredibly friendly service"]
+        }
+    ]
+    },
+    {
+    "location": "Paris, France",
+    "restaurants": [
+        {
+        "id": "par_001",
+        "name": "L'Ambroisie",
+        "cuisine": "Classic French",
+        "rating": 4.9,
+        "price_level": "$$$$",
+        "neighborhood": "Saint-Germain-des-Prés",
+        "highlights": ["Three Michelin Stars", "Historic restaurant since 1928", "Renowned for its exquisite tasting menus"]
+        },
+        {
+        "id": "par_002",
+        "name": "Le Comptoir du Relais",
+        "cuisine": "Bistro French",
+        "rating": 4.7,
+        "price_level": "$$",
+        "neighborhood": "Saint-Germain-des-Prés",
+        "highlights": ["Cozy bistro atmosphere", "Authentic French dishes", "Popular among locals and tourists"]
+        },
+        {
+        "id": "par_003",
+        "name": "Septime",
+        "cuisine": "Modern French",
+        "rating": 4.8,
+        "price_level": "$$$",
+        "neighborhood": "11th Arrondissement",
+        "highlights": ["Award-winning modern cuisine", "Seasonal ingredients", "Intimate dining experience"]
+        },
+        {
+        "id": "par_004",
+        "name": "Chez Janou",
+        "cuisine": "Provencal",
+        "rating": 4.6,
+        "price_level": "$$",
+        "neighborhood": "Le Marais",
+        "highlights": ["Warm and welcoming", "Traditional Provençal recipes", "Known for its bouillabaisse"]
+        },
+        {
+        "id": "par_005",
+        "name": "Pavillon Ledoyen",
+        "cuisine": "French",
+        "rating": 4.5,
+        "price_level": "$$$",
+        "neighborhood": "Champs-Élysées",
+        "highlights": ["Elegant setting", "Classic French dishes", "Iconic Parisian brasserie"]
+        }
+    ]
+    },
+    {
+        "location": "San Francisco, CA",
+        "restaurants": [
+            {
+            "id": "sf_001",
+            "name": "Zuni Café",
+            "cuisine": "French/Italian",
+            "rating": 4.6,
+            "price_level": "$$$",
+            "neighborhood": "Hayes Valley",
+            "highlights": ["Famous roasted chicken", "Wood-fired brick oven", "Iconic oyster bar"]
+            },
+            {
+            "id": "sf_002",
+            "name": "Sotto Mare",
+            "cuisine": "Seafood",
+            "rating": 4.7,
+            "price_level": "$$",
+            "neighborhood": "North Beach",
+            "highlights": ["Best Cioppino in the city", "Authentic Italian vibe", "Fresh oysters"]
+            },
+            {
+            "id": "sf_003",
+            "name": "Mister Jiu's",
+            "cuisine": "Modern Chinese",
+            "rating": 4.5,
+            "price_level": "$$$$",
+            "neighborhood": "Chinatown",
+            "highlights": ["Michelin Star", "Creative cocktails", "Upscale banquet style"]
+            },
+            {
+            "id": "sf_004",
+            "name": "Brenda's French Soul Food",
+            "cuisine": "Creole/Southern",
+            "rating": 4.4,
+            "price_level": "$$",
+            "neighborhood": "Tenderloin",
+            "highlights": ["Beignets flight", "Shrimp and grits", "Great for brunch"]
+            },
+            {
+            "id": "sf_005",
+            "name": "La Taqueria",
+            "cuisine": "Mexican",
+            "rating": 4.8,
+            "price_level": "$",
+            "neighborhood": "Mission District",
+            "highlights": ["Award-winning Mission burritos", "No-rice style", "Cash only"]
+            }
+        ]
+    },
+    {
+    "location": "London, UK",
+    "restaurants": [
+        {
+        "id": "lon_001",
+        "name": "Dishoom",
+        "cuisine": "Indian",
+        "rating": 4.7,
+        "price_level": "$$",
+        "neighborhood": "King's Cross/Soho",
+        "highlights": ["Bombay cafe style", "Famous bacon naan roll", "Great atmosphere"]
+        },
+        {
+        "id": "lon_002",
+        "name": "The Ledbury",
+        "cuisine": "Modern British",
+        "rating": 4.9,
+        "price_level": "$$$$",
+        "neighborhood": "Notting Hill",
+        "highlights": ["Three Michelin Stars", "Seasonal tasting menu", "Elegant fine dining"]
+        },
+        {
+        "id": "lon_003",
+        "name": "Padella",
+        "cuisine": "Italian/Pasta",
+        "rating": 4.6,
+        "price_level": "$$",
+        "neighborhood": "Borough Market",
+        "highlights": ["Hand-rolled pasta", "Counter seating", "No reservations (virtual queue)"]
+        },
+        {
+        "id": "lon_004",
+        "name": "St. John",
+        "cuisine": "Traditional British",
+        "rating": 4.5,
+        "price_level": "$$$",
+        "neighborhood": "Smithfield",
+        "highlights": ["Nose-to-tail eating", "Famous bone marrow", "Minimalist setting"]
+        },
+        {
+        "id": "lon_005",
+        "name": "Tayyabs",
+        "cuisine": "Punjabi",
+        "rating": 4.4,
+        "price_level": "$",
+        "neighborhood": "Whitechapel",
+        "highlights": ["Famous lamb chops", "BYOB", "Lively and loud"]
+        }
+    ]
+    }    
+}
