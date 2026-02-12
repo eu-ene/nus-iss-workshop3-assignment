@@ -2,6 +2,13 @@ from typing import List, Dict, Any
 from travel_planner.config import settings
 import requests
 from bs4 import BeautifulSoup
+import requests
+import datetime
+import json
+import re
+
+SERPAPI_API_KEY = "YOUR_SERPAPI_KEY"
+
 
 # Amadeus imports (optional if installed)
 try:
@@ -132,6 +139,70 @@ def agoda_search(destination: str, check_in: str, check_out: str, max_price_per_
         {"name": "Budget Stay", "stars": 3, "price_per_night": 90.0, "rating": 7.8, "currency": "USD", "link": "https://www.agoda.com/mock2"},
         {"name": "Luxury Resort", "stars": 5, "price_per_night": 300.0, "rating": 9.4, "currency": "USD", "link": "https://www.agoda.com/mock3"}
     ]
+
+    # extract the stars from the API calls in integer form    
+    def extract_stars(value):
+        if not value:
+            return 0
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str):
+            match = re.search(r"\d+", value)
+            return int(match.group()) if match else 0
+        return 0
+
+    #extract the price of the hotel from API call into float
+    def extract_price(rate_info):
+        if not isinstance(rate_info, dict):
+            return 0.0, "USD"
+
+        raw_price = rate_info.get("lowest") or rate_info.get("highest")
+        currency = rate_info.get("currency", "USD")
+
+        if not raw_price:
+            return 0.0, currency
+
+        cleaned = "".join(c for c in str(raw_price) if c.isdigit() or c == ".")
+        price = float(cleaned) if cleaned else 0.0
+
+        return price, currency
+
+    #pass in parameters
+    def get_hotels_by_city(city: str):
+        check_in = (datetime.date.today() + datetime.timedelta(days=30)).isoformat()
+        check_out = (datetime.date.today() + datetime.timedelta(days=31)).isoformat()
+
+        params = {
+            "engine": "google_hotels",
+            "q": f"Hotels in {city}",
+            "check_in_date": check_in,
+            "check_out_date": check_out,
+            "currency": "USD",
+            "hl": "en",
+            "api_key": SERPAPI_API_KEY
+        }
+
+        response = requests.get("https://serpapi.com/search", params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        #Append json to Hotels dict
+        for hotel in data.get("properties", []):
+            price, currency = extract_price(hotel.get("rate_per_night"))
+            stars = extract_stars(hotel.get("hotel_class"))
+
+            rating_raw = hotel.get("overall_rating")
+            rating = float(rating_raw) if rating_raw else 0.0
+
+            hotels.append({
+                "name": str(hotel.get("name", "")),
+                "stars": stars,
+                "price_per_night": float(price),
+                "rating": rating,
+                "currency": str(currency),
+                "link": str(hotel.get("link", ""))
+            })
+
     if max_price_per_night:
         hotels = [h for h in hotels if h["price_per_night"] <= max_price_per_night]
     if stars_preference:
