@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from travel_planner.tools.scraper import amadeus_flights_search
+from tools.scraper import amadeus_flights_search
 
 class FlightAgent:
     """
@@ -13,3 +13,22 @@ class FlightAgent:
             affordable = [f for f in flights_sorted if f.get("price", float('inf')) <= budget]
             return affordable if affordable else flights_sorted
         return flights_sorted
+
+# Test client
+def main():
+    agent = FlightAgent()
+    flights = agent.search(
+        origin="SIN",
+        destination="BKK",
+        depart_date="2026-03-01",
+        return_date=None,
+        passengers=1,
+        budget=500.0,
+    )
+    print(f"Found {len(flights)} flights")
+    for f in flights[:5]:
+        print(f)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,8 +1,8 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    AMADEUS_CLIENT_ID: str | None = None
-    AMADEUS_CLIENT_SECRET: str | None = None
+    AMADEUS_CLIENT_ID: str = "API Key"
+    AMADEUS_CLIENT_SECRET: str = "API SECRET"
 
     AGODA_API_KEY: str | None = None
 
