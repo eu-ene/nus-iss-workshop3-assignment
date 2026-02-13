@@ -11,7 +11,9 @@ class Settings(BaseSettings):
 
     USER_AGENT: str = "TravelPlannerBot/1.0"
     DEFAULT_PASSENGERS: int = 1
+    
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
 
 settings = Settings()

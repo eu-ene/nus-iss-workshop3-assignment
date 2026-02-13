@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from config import settings
+from travel_planner.config import settings
 import requests
 from bs4 import BeautifulSoup
 import requests
@@ -34,6 +34,23 @@ def _resolve_to_iata(amadeus_client, query: str) -> str | None:
     q = query.strip()
     if len(q) == 3 and q.isalpha():
         return q.upper()
+    
+    # Common city to IATA mappings
+    city_mappings = {
+        "tokyo": "TYO",
+        "bangkok": "BKK",
+        "singapore": "SIN",
+        "london": "LON",
+        "paris": "PAR",
+        "new york": "NYC",
+        "san francisco": "SFO",
+        "los angeles": "LAX"
+    }
+    
+    city_lower = q.lower()
+    if city_lower in city_mappings:
+        return city_mappings[city_lower]
+    
     if not amadeus_client:
         return None
     try:
@@ -86,9 +103,16 @@ def amadeus_flights_search(origin: str, destination: str, depart_date: str, retu
     try:
         resp = client.shopping.flight_offers_search.get(**params)
     except AmadeusResponseError as err:
-        print(err.description)
+        import sys
+        print(f"Amadeus API Error: {err}", file=sys.stderr)
+        try:
+            print(f"Error details: {err.response.body if hasattr(err, 'response') else 'No details'}", file=sys.stderr)
+        except:
+            pass
         return [{"airline": "MockAir-Error", "departure": f"{depart_date}T09:00","arrival": f"{depart_date}T11:00","price":350.0,"currency":"USD","stops":0,"link":None}]
-    except Exception:
+    except Exception as e:
+        import sys
+        print(f"Amadeus Exception: {str(e)}", file=sys.stderr)
         return [{"airline": "MockAir-Exception", "departure": f"{depart_date}T09:00","arrival": f"{depart_date}T11:00","price":330.0,"currency":"USD","stops":0,"link":None}]
 
     offers = getattr(resp, "data", []) or []
@@ -131,110 +155,170 @@ def amadeus_flights_search(origin: str, destination: str, depart_date: str, retu
     return sorted(flights, key=lambda f: f.get("price", float("inf")))
 
 # -------- Agoda (hotels) - mocked placeholder -------
-def agoda_search(destination: str, check_in: str, check_out: str, max_price_per_night: float | None=None, stars_preference:int | None=None) -> List[Dict[str,Any]]:
+def agoda_search(destination: str, check_in: str, check_out: str, max_price_per_night: float | None=None, stars_preference:int | None=None, verbose: bool = False) -> List[Dict[str,Any]]:
+    if verbose:
+        print(f"[AGODA_SEARCH] Destination: {destination}, Check-in: {check_in}, Check-out: {check_out}")
+        print(f"[AGODA_SEARCH] Max price/night: ${max_price_per_night}, Stars: {stars_preference}")
+    
     hotels = [
         {"name": "Agoda Plaza", "stars": 4, "price_per_night": 150.0, "rating": 8.9, "currency": "USD", "link": "https://www.agoda.com/mock1"},
         {"name": "Budget Stay", "stars": 3, "price_per_night": 90.0, "rating": 7.8, "currency": "USD", "link": "https://www.agoda.com/mock2"},
         {"name": "Luxury Resort", "stars": 5, "price_per_night": 300.0, "rating": 9.4, "currency": "USD", "link": "https://www.agoda.com/mock3"}
     ]
+    
+    # Try SerpAPI if configured
+    if settings.SERPAPI_API_KEY:
+        if verbose:
+            print(f"[AGODA_SEARCH] SerpAPI key found (length: {len(settings.SERPAPI_API_KEY)}), attempting API call...")
+        try:
+            params = {
+                "engine": "google_hotels",
+                "q": f"Hotels in {destination}",
+                "check_in_date": check_in,
+                "check_out_date": check_out,
+                "currency": "USD",
+                "hl": "en",
+                "api_key": settings.SERPAPI_API_KEY
+            }
+            
+            response = requests.get("https://serpapi.com/search", params=params, timeout=10)
+            
+            if verbose:
+                print(f"[AGODA_SEARCH] API response status: {response.status_code}")
+            
+            response.raise_for_status()
+            data = response.json()
+            
+            if verbose:
+                print(f"[AGODA_SEARCH] API returned {len(data.get('properties', []))} properties")
+            
+            # Extract hotels from API response
+            def extract_stars(value):
+                if not value:
+                    return 0
+                if isinstance(value, int):
+                    return value
+                if isinstance(value, str):
+                    match = re.search(r"\d+", value)
+                    return int(match.group()) if match else 0
+                return 0
 
-    # extract the stars from the API calls in integer form    
-    def extract_stars(value):
-        if not value:
-            return 0
-        if isinstance(value, int):
-            return value
-        if isinstance(value, str):
-            match = re.search(r"\d+", value)
-            return int(match.group()) if match else 0
-        return 0
-
-    #extract the price of the hotel from API call into float
-    def extract_price(rate_info):
-        if not isinstance(rate_info, dict):
-            return 0.0, "USD"
-
-        raw_price = rate_info.get("lowest") or rate_info.get("highest")
-        currency = rate_info.get("currency", "USD")
-
-        if not raw_price:
-            return 0.0, currency
-
-        cleaned = "".join(c for c in str(raw_price) if c.isdigit() or c == ".")
-        price = float(cleaned) if cleaned else 0.0
-
-        return price, currency
-
-    #pass in parameters
-    def get_hotels_by_city(city: str):
-        check_in = (datetime.date.today() + datetime.timedelta(days=30)).isoformat()
-        check_out = (datetime.date.today() + datetime.timedelta(days=31)).isoformat()
-
-        params = {
-            "engine": "google_hotels",
-            "q": f"Hotels in {city}",
-            "check_in_date": check_in,
-            "check_out_date": check_out,
-            "currency": "USD",
-            "hl": "en",
-            "api_key": settings.SERPAPI_API_KEY
-        }
-
-        response = requests.get("https://serpapi.com/search", params=params)
-        response.raise_for_status()
-        data = response.json()
-
-        #Append json to Hotels dict
-        for hotel in data.get("properties", []):
-            price, currency = extract_price(hotel.get("rate_per_night"))
-            stars = extract_stars(hotel.get("hotel_class"))
-
-            rating_raw = hotel.get("overall_rating")
-            rating = float(rating_raw) if rating_raw else 0.0
-
-            hotels.append({
-                "name": str(hotel.get("name", "")),
-                "stars": stars,
-                "price_per_night": float(price),
-                "rating": rating,
-                "currency": str(currency),
-                "link": str(hotel.get("link", ""))
-            })
+            def extract_price(rate_info):
+                if not isinstance(rate_info, dict):
+                    return 0.0, "USD"
+                raw_price = rate_info.get("lowest") or rate_info.get("highest")
+                currency = rate_info.get("currency", "USD")
+                if not raw_price:
+                    return 0.0, currency
+                cleaned = "".join(c for c in str(raw_price) if c.isdigit() or c == ".")
+                price = float(cleaned) if cleaned else 0.0
+                return price, currency
+            
+            api_hotels = []
+            for hotel in data.get("properties", []):
+                price, currency = extract_price(hotel.get("rate_per_night"))
+                stars = extract_stars(hotel.get("hotel_class"))
+                rating_raw = hotel.get("overall_rating")
+                rating = float(rating_raw) if rating_raw else 0.0
+                
+                api_hotels.append({
+                    "name": str(hotel.get("name", "")),
+                    "stars": stars,
+                    "price_per_night": float(price),
+                    "rating": rating,
+                    "currency": str(currency),
+                    "link": str(hotel.get("link", ""))
+                })
+            
+            if api_hotels:
+                hotels = api_hotels
+                if verbose:
+                    print(f"[AGODA_SEARCH] Using {len(hotels)} hotels from API")
+            else:
+                if verbose:
+                    print(f"[AGODA_SEARCH] No hotels from API, using mock data")
+        
+        except requests.exceptions.RequestException as e:
+            if verbose:
+                print(f"[AGODA_SEARCH] API request error: {str(e)}")
+                if hasattr(e, 'response') and e.response is not None:
+                    try:
+                        error_data = e.response.json()
+                        print(f"[AGODA_SEARCH] API error response: {error_data}")
+                    except:
+                        print(f"[AGODA_SEARCH] API error response text: {e.response.text[:200]}")
+                print(f"[AGODA_SEARCH] Falling back to mock data")
+        except Exception as e:
+            if verbose:
+                print(f"[AGODA_SEARCH] API error: {str(e)}")
+                print(f"[AGODA_SEARCH] Falling back to mock data")
+    else:
+        if verbose:
+            print(f"[AGODA_SEARCH] No SerpAPI key configured, using mock data")
+    
+    if verbose:
+        print(f"[AGODA_SEARCH] Total hotels before filtering: {len(hotels)}")
 
     if max_price_per_night:
+        before_filter = len(hotels)
         hotels = [h for h in hotels if h["price_per_night"] <= max_price_per_night]
+        if verbose:
+            print(f"[AGODA_SEARCH] After price filter (${max_price_per_night}/night): {len(hotels)} (removed {before_filter - len(hotels)})")
+    
     if stars_preference:
+        before_filter = len(hotels)
         hotels = [h for h in hotels if h["stars"] >= stars_preference]
+        if verbose:
+            print(f"[AGODA_SEARCH] After stars filter ({stars_preference}+): {len(hotels)} (removed {before_filter - len(hotels)})")
+    
     hotels = sorted(hotels, key=lambda h: (-h["rating"], h["price_per_night"]))
+    
+    if verbose:
+        print(f"[AGODA_SEARCH] Final results: {len(hotels)} hotels")
+        for h in hotels:
+            print(f"[AGODA_SEARCH]   - {h['name']}: ${h['price_per_night']}/night, {h['stars']}★, Rating: {h['rating']}")
+    
     return hotels
 
 # --- Mock Data Store ---
 MOCK_RESTAURANTS = {
     "san francisco": [
-        {"name": "Zuni Café", "cuisine": "French/Italian", "rating": 4.6, "price_level": "$$$", "neighborhood": "Hayes Valley"},
-        {"name": "Sotto Mare", "cuisine": "Seafood", "rating": 4.7, "price_level": "$$", "neighborhood": "North Beach"},
-        {"name": "Mister Jiu's", "cuisine": "Modern Chinese", "rating": 4.5, "price_level": "$$$$", "neighborhood": "Chinatown"},
-        {"name": "Brenda's French Soul Food", "cuisine": "Creole/Southern", "rating": 4.4, "price_level": "$$", "neighborhood": "Tenderloin"},
-        {"name": "La Taqueria", "cuisine": "Mexican", "rating": 4.8, "price_level": "$", "neighborhood": "Mission District"}
+        {"name": "Zuni Café", "cuisine": "French/Italian", "rating": 4.6, "price_level": "$$$", "avg_price": 65.0, "neighborhood": "Hayes Valley"},
+        {"name": "Sotto Mare", "cuisine": "Seafood", "rating": 4.7, "price_level": "$$", "avg_price": 35.0, "neighborhood": "North Beach"},
+        {"name": "Mister Jiu's", "cuisine": "Modern Chinese", "rating": 4.5, "price_level": "$$$$", "avg_price": 95.0, "neighborhood": "Chinatown"},
+        {"name": "Brenda's French Soul Food", "cuisine": "Creole/Southern", "rating": 4.4, "price_level": "$$", "avg_price": 30.0, "neighborhood": "Tenderloin"},
+        {"name": "La Taqueria", "cuisine": "Mexican", "rating": 4.8, "price_level": "$", "avg_price": 15.0, "neighborhood": "Mission District"}
     ],
     "tokyo": [
-        {"name": "Kaiten Sushi Toriton", "cuisine": "Sushi", "rating": 4.7, "price_level": "$$", "neighborhood": "Sumida"},
-        {"name": "Rokurinsha", "cuisine": "Ramen", "rating": 4.5, "price_level": "$", "neighborhood": "Tokyo Station"},
-        {"name": "Sézanne", "cuisine": "Modern French", "rating": 4.9, "price_level": "$$$$", "neighborhood": "Marunouchi"},
-        {"name": "Gyukatsu Motomura", "cuisine": "Beef Cutlet", "rating": 4.6, "price_level": "$$", "neighborhood": "Shibuya"},
-        {"name": "Den", "cuisine": "Kaiseki", "rating": 4.8, "price_level": "$$$$", "neighborhood": "Jingumae"}
+        {"name": "Kaiten Sushi Toriton", "cuisine": "Sushi", "rating": 4.7, "price_level": "$$", "avg_price": 25.0, "neighborhood": "Sumida"},
+        {"name": "Rokurinsha", "cuisine": "Ramen", "rating": 4.5, "price_level": "$", "avg_price": 12.0, "neighborhood": "Tokyo Station"},
+        {"name": "Sézanne", "cuisine": "Modern French", "rating": 4.9, "price_level": "$$$$", "avg_price": 180.0, "neighborhood": "Marunouchi"},
+        {"name": "Gyukatsu Motomura", "cuisine": "Beef Cutlet", "rating": 4.6, "price_level": "$$", "avg_price": 28.0, "neighborhood": "Shibuya"},
+        {"name": "Den", "cuisine": "Kaiseki", "rating": 4.8, "price_level": "$$$$", "avg_price": 200.0, "neighborhood": "Jingumae"}
     ],
     "london": [
-        {"name": "Dishoom", "cuisine": "Indian", "rating": 4.7, "price_level": "$$", "neighborhood": "Soho"},
-        {"name": "The Ledbury", "cuisine": "Modern British", "rating": 4.9, "price_level": "$$$$", "neighborhood": "Notting Hill"},
-        {"name": "Padella", "cuisine": "Italian", "rating": 4.6, "price_level": "$$", "neighborhood": "Borough Market"},
-        {"name": "St. John", "cuisine": "British", "rating": 4.5, "price_level": "$$$", "neighborhood": "Smithfield"},
-        {"name": "Tayyabs", "cuisine": "Punjabi", "rating": 4.4, "price_level": "$", "neighborhood": "Whitechapel"}
+        {"name": "Dishoom", "cuisine": "Indian", "rating": 4.7, "price_level": "$$", "avg_price": 35.0, "neighborhood": "Soho"},
+        {"name": "The Ledbury", "cuisine": "Modern British", "rating": 4.9, "price_level": "$$$$", "avg_price": 150.0, "neighborhood": "Notting Hill"},
+        {"name": "Padella", "cuisine": "Italian", "rating": 4.6, "price_level": "$$", "avg_price": 30.0, "neighborhood": "Borough Market"},
+        {"name": "St. John", "cuisine": "British", "rating": 4.5, "price_level": "$$$", "avg_price": 70.0, "neighborhood": "Smithfield"},
+        {"name": "Tayyabs", "cuisine": "Punjabi", "rating": 4.4, "price_level": "$", "avg_price": 20.0, "neighborhood": "Whitechapel"}
+    ],
+    "bangkok": [
+        {"name": "Sorn", "cuisine": "Southern Thai", "rating": 4.8, "price_level": "$$$$", "avg_price": 120.0, "neighborhood": "Thonglor"},
+        {"name": "Jay Fai", "cuisine": "Seafood/Thai", "rating": 4.7, "price_level": "$$$", "avg_price": 50.0, "neighborhood": "Phra Nakhon"},
+        {"name": "Supanniga Eating Room", "cuisine": "Thai", "rating": 4.6, "price_level": "$$", "avg_price": 25.0, "neighborhood": "Thonglor"},
+        {"name": "Thip Samai", "cuisine": "Pad Thai", "rating": 4.5, "price_level": "$", "avg_price": 8.0, "neighborhood": "Phra Nakhon"},
+        {"name": "Paste Bangkok", "cuisine": "Modern Thai", "rating": 4.7, "price_level": "$$$$", "avg_price": 100.0, "neighborhood": "Ratchathewi"},
+        {"name": "Krua Apsorn", "cuisine": "Thai", "rating": 4.6, "price_level": "$$", "avg_price": 20.0, "neighborhood": "Dusit"},
+        {"name": "Somtum Der", "cuisine": "Isaan/Thai", "rating": 4.5, "price_level": "$$", "avg_price": 22.0, "neighborhood": "Sala Daeng"},
+        {"name": "Err Urban Rustic Thai", "cuisine": "Thai", "rating": 4.4, "price_level": "$$", "avg_price": 18.0, "neighborhood": "Phra Nakhon"},
+        {"name": "Nahm", "cuisine": "Thai", "rating": 4.8, "price_level": "$$$$", "avg_price": 110.0, "neighborhood": "Sathorn"},
+        {"name": "Prachak Pet Yang", "cuisine": "Roast Duck", "rating": 4.6, "price_level": "$", "avg_price": 10.0, "neighborhood": "Charoen Krung"}
     ]
 }
 
 # -------- Restaurants - mock data -------
-def tripadvisor_restaurants_search(destination: str, cuisine: str | None=None, price_level: str | None=None, limit:int=10) -> List[Dict[str,Any]]:
+def mock_restaurants_search(destination: str, cuisine: str | None=None, price_level: str | None=None, limit:int=10) -> List[Dict[str,Any]]:
     """
     Search for restaurants in a specific city with optional filters for cuisine and price.
     """

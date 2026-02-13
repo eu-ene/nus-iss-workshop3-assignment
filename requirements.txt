@@ -1,20 +1,17 @@
-# note: if running into issues, can consider to remove the version locking
-
-# Core
+# Core dependencies
 requests>=2.28
 beautifulsoup4>=4.12
 python-dotenv>=1.0
-pydantic>=1.10
+pydantic>=2.0
+pydantic-settings>=2.0
 rich>=13.3.3
 
-# Amadeus SDK for flights
+# API integrations
 amadeus>=5.3.0
-
-# OpenAI SDK for LLM
 openai>=0.27.0
 
-# Optional: LangGraph (adapter included)
+# Optional: LangGraph
 langgraph>=0.0.1
 
-# Optional: For Zscaler SSL certification issue
+# Optional: SSL certification
 truststore
