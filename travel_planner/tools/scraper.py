@@ -208,46 +208,43 @@ def agoda_search(destination: str, check_in: str, check_out: str, max_price_per_
     hotels = sorted(hotels, key=lambda h: (-h["rating"], h["price_per_night"]))
     return hotels
 
-# -------- Restaurants - mock data -------
-def tripadvisor_restaurants_search(destination: str, cuisine: str | None=None, price_level: int | None=None, limit:int=10) -> List[Dict[str,Any]]:
-    """
-    Best-effort TripAdvisor search via HTTP parse; fallback to mock results.
-    """
-    query = f"{destination} {cuisine or ''} restaurants".strip()
-    search_url = "https://www.tripadvisor.com/Search"
-    headers = {"User-Agent": USER_AGENT}
-    try:
-        resp = requests.get(search_url, params={"q": query}, headers=headers, timeout=8)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
-        anchors = soup.find_all("a", href=True)
-        results = []
-        seen = set()
-        for a in anchors:
-            href = a["href"]
-            if '/Restaurant_Review-' in href or '/Restaurants-' in href:
-                name = a.get_text(strip=True) or a.get('title') or a.get('aria-label') or "TripAdvisor Restaurant"
-                link = "https://www.tripadvisor.com" + href.split("#",1)[0]
-                if link in seen:
-                    continue
-                seen.add(link)
-                results.append({
-                    "name": name,
-                    "link": link,
-                    "snippet": "",
-                    "estimated_price": 15.0,
-                    "cuisine": cuisine or "Various"
-                })
-                if len(results) >= limit:
-                    break
-        if results:
-            return results
-    except Exception:
-        pass
-    # Mock fallback
-    mock = [
-        {"name": "Local Noodle House", "link": "https://www.tripadvisor.com/mock1", "estimated_price": 8.0, "cuisine": "local"},
-        {"name": "Seafood Delight", "link": "https://www.tripadvisor.com/mock2", "estimated_price": 25.0, "cuisine": "seafood"},
-        {"name": "Vegetarian Corner", "link": "https://www.tripadvisor.com/mock3", "estimated_price": 12.0, "cuisine": "vegetarian"},
+# --- Mock Data Store ---
+MOCK_RESTAURANTS = {
+    "san francisco": [
+        {"name": "Zuni Café", "cuisine": "French/Italian", "rating": 4.6, "price_level": "$$$", "neighborhood": "Hayes Valley"},
+        {"name": "Sotto Mare", "cuisine": "Seafood", "rating": 4.7, "price_level": "$$", "neighborhood": "North Beach"},
+        {"name": "Mister Jiu's", "cuisine": "Modern Chinese", "rating": 4.5, "price_level": "$$$$", "neighborhood": "Chinatown"},
+        {"name": "Brenda's French Soul Food", "cuisine": "Creole/Southern", "rating": 4.4, "price_level": "$$", "neighborhood": "Tenderloin"},
+        {"name": "La Taqueria", "cuisine": "Mexican", "rating": 4.8, "price_level": "$", "neighborhood": "Mission District"}
+    ],
+    "tokyo": [
+        {"name": "Kaiten Sushi Toriton", "cuisine": "Sushi", "rating": 4.7, "price_level": "$$", "neighborhood": "Sumida"},
+        {"name": "Rokurinsha", "cuisine": "Ramen", "rating": 4.5, "price_level": "$", "neighborhood": "Tokyo Station"},
+        {"name": "Sézanne", "cuisine": "Modern French", "rating": 4.9, "price_level": "$$$$", "neighborhood": "Marunouchi"},
+        {"name": "Gyukatsu Motomura", "cuisine": "Beef Cutlet", "rating": 4.6, "price_level": "$$", "neighborhood": "Shibuya"},
+        {"name": "Den", "cuisine": "Kaiseki", "rating": 4.8, "price_level": "$$$$", "neighborhood": "Jingumae"}
+    ],
+    "london": [
+        {"name": "Dishoom", "cuisine": "Indian", "rating": 4.7, "price_level": "$$", "neighborhood": "Soho"},
+        {"name": "The Ledbury", "cuisine": "Modern British", "rating": 4.9, "price_level": "$$$$", "neighborhood": "Notting Hill"},
+        {"name": "Padella", "cuisine": "Italian", "rating": 4.6, "price_level": "$$", "neighborhood": "Borough Market"},
+        {"name": "St. John", "cuisine": "British", "rating": 4.5, "price_level": "$$$", "neighborhood": "Smithfield"},
+        {"name": "Tayyabs", "cuisine": "Punjabi", "rating": 4.4, "price_level": "$", "neighborhood": "Whitechapel"}
     ]
-    return mock[:limit]
+}
+
+# -------- Restaurants - mock data -------
+def tripadvisor_restaurants_search(destination: str, cuisine: str | None=None, price_level: str | None=None, limit:int=10) -> List[Dict[str,Any]]:
+    """
+    Search for restaurants in a specific city with optional filters for cuisine and price.
+    """
+    city_key = destination.lower().strip()
+    restaurants = MOCK_RESTAURANTS.get(city_key, [])
+    
+    if cuisine:
+        restaurants = [r for r in restaurants if cuisine.lower() in r["cuisine"].lower()]
+    
+    if price_level:
+        restaurants = [r for r in restaurants if r["price_level"] == price_level]
+    
+    return restaurants[:limit]
