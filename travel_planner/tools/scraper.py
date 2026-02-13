@@ -7,9 +7,6 @@ import datetime
 import json
 import re
 
-SERPAPI_API_KEY = "YOUR_SERPAPI_KEY"
-
-
 # Amadeus imports (optional if installed)
 try:
     from amadeus import Client as AmadeusClient, ResponseError as AmadeusResponseError
@@ -180,7 +177,7 @@ def agoda_search(destination: str, check_in: str, check_out: str, max_price_per_
             "check_out_date": check_out,
             "currency": "USD",
             "hl": "en",
-            "api_key": SERPAPI_API_KEY
+            "api_key": settings.SERPAPI_API_KEY
         }
 
         response = requests.get("https://serpapi.com/search", params=params)
@@ -211,7 +208,7 @@ def agoda_search(destination: str, check_in: str, check_out: str, max_price_per_
     hotels = sorted(hotels, key=lambda h: (-h["rating"], h["price_per_night"]))
     return hotels
 
-# -------- TripAdvisor restaurants -------
+# -------- Restaurants - mock data -------
 def tripadvisor_restaurants_search(destination: str, cuisine: str | None=None, price_level: int | None=None, limit:int=10) -> List[Dict[str,Any]]:
     """
     Best-effort TripAdvisor search via HTTP parse; fallback to mock results.

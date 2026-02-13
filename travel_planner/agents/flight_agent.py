@@ -15,20 +15,20 @@ class FlightAgent:
         return flights_sorted
 
 # Test client
-def main():
-    agent = FlightAgent()
-    flights = agent.search(
-        origin="SIN",
-        destination="BKK",
-        depart_date="2026-03-01",
-        return_date=None,
-        passengers=1,
-        budget=500.0,
-    )
-    print(f"Found {len(flights)} flights")
-    for f in flights[:5]:
-        print(f)
+# def main():
+#     agent = FlightAgent()
+#     flights = agent.search(
+#         origin="SIN",
+#         destination="BKK",
+#         depart_date="2026-03-01",
+#         return_date=None,
+#         passengers=1,
+#         budget=500.0,
+#     )
+#     print(f"Found {len(flights)} flights")
+#     for f in flights[:5]:
+#         print(f)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
