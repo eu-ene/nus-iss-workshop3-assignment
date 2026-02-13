@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from travel_planner.config import settings
+from config import settings
 import requests
 from bs4 import BeautifulSoup
 import requests
@@ -88,7 +88,8 @@ def amadeus_flights_search(origin: str, destination: str, depart_date: str, retu
 
     try:
         resp = client.shopping.flight_offers_search.get(**params)
-    except AmadeusResponseError:
+    except AmadeusResponseError as err:
+        print(err.description)
         return [{"airline": "MockAir-Error", "departure": f"{depart_date}T09:00","arrival": f"{depart_date}T11:00","price":350.0,"currency":"USD","stops":0,"link":None}]
     except Exception:
         return [{"airline": "MockAir-Exception", "departure": f"{depart_date}T09:00","arrival": f"{depart_date}T11:00","price":330.0,"currency":"USD","stops":0,"link":None}]
