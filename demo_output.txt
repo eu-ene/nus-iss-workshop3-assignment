@@ -1,2 +1,0 @@
-Example demo outputs will appear when running examples/demo_langgraph.py.
-Expect chosen_flight, chosen_hotel, chosen_restaurants and cost_breakdown JSON here.
